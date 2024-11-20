@@ -61,8 +61,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#6200ea',
   },
   innerCheckbox: {
-    width: 12,
-    height: 12,
+    width: 0,
+    height: 0,
     backgroundColor: '#fff',
   },
   textContainer: {
