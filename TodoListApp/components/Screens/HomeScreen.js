@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, FlatList, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity, FlatList } from 'react-native';
 import { db } from '../../utils/firebaseConfig'; // Asegúrate de que la ruta sea correcta
 import { collection, query, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore'; // Importar funciones de Firestore
 import Tarea from '../Tarea'; // Asegúrate de que la ruta sea correcta
@@ -16,6 +16,7 @@ const HomeScreen = ({ navigation }) => {
         tareasData.push({
           ...documentSnapshot.data(),
           id: documentSnapshot.id,
+          marcada: documentSnapshot.data().marcada || false, // Asegurarse de tener la propiedad 'marcada'
         });
       });
       setTareas(tareasData);
@@ -73,32 +74,54 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  // Función para ir a la pantalla de edición
-  const handleEdit = (id) => {
-    const tarea = tareas.find((t) => t.id === id);
-    navigation.navigate('NewTarea', {
-      tarea,
-      onSave: handleEditTarea,
-    });
+  // Función para alternar el estado de "marcada" de la tarea
+  const toggleTareaMarcada = async (id) => {
+    const tareaIndex = tareas.findIndex((t) => t.id === id);
+    const tarea = tareas[tareaIndex];
+    const tareaRef = doc(db, 'tareas', id);
+
+    // Alternamos el estado de "marcada"
+    const updatedTarea = { ...tarea, marcada: !tarea.marcada };
+
+    try {
+      await updateDoc(tareaRef, updatedTarea);
+      console.log('Tarea marcada/desmarcada');
+      // Actualizamos el estado de tareas
+      setTareas((prevTareas) => {
+        const updatedTareas = [...prevTareas];
+        updatedTareas[tareaIndex] = updatedTarea;
+        return updatedTareas;
+      });
+    } catch (error) {
+      console.error('Error al actualizar tarea:', error);
+    }
   };
+
+  // Renderizar cada tarea en el FlatList
+  const renderItem = ({ item }) => (
+    <Tarea
+      key={item.id}
+      titulo={item.titulo}
+      fecha={item.fecha}
+      isChecked={item.marcada}
+      onEdit={() => handleEditTarea(item)}
+      onDelete={() => handleDelete(item.id)}
+      onToggleMarcado={() => toggleTareaMarcada(item.id)} // Pasamos la función de actualización
+    />
+  );
 
   return (
     <View style={styles.container}>
-      {/* Contenido de la Home Screen */}
       <Text style={styles.title}>Lista de Tareas</Text>
+
+      {/* Utilizamos FlatList para mostrar las tareas */}
       <FlatList
         data={tareas}
+        renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <Tarea
-            titulo={item.titulo}
-            fecha={item.fecha}
-            onEdit={() => handleEdit(item.id)}
-            onDelete={() => handleDelete(item.id)}
-          />
-        )}
+        extraData={tareas} // Aseguramos que el estado de las tareas se vuelva a renderizar cuando cambie
       />
-      {/* Botón flotante */}
+
       <TouchableOpacity
         style={styles.floatingButton}
         onPress={() => navigation.navigate('NewTarea', { onSave: handleAddTask })}

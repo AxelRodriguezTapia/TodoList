@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 
 const CustomCheckBox = ({ isChecked, onChange }) => {
@@ -12,12 +12,11 @@ const CustomCheckBox = ({ isChecked, onChange }) => {
   );
 };
 
-const Tarea = ({ titulo, fecha, onEdit, onDelete }) => {
-  const [isChecked, setIsChecked] = useState(false);
-
+const Tarea = ({ titulo, fecha, onEdit, onDelete, isChecked, onToggleMarcado }) => {
   return (
     <View style={styles.container}>
-      <CustomCheckBox isChecked={isChecked} onChange={() => setIsChecked(!isChecked)} />
+      {/* Aquí pasamos el estado isChecked y la función onToggleMarcado */}
+      <CustomCheckBox isChecked={isChecked} onChange={onToggleMarcado} />
 
       <View style={styles.textContainer}>
         <Text style={[styles.title, isChecked && styles.completedTitle]}>{titulo}</Text>
