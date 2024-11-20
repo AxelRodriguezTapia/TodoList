@@ -1,47 +1,52 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { View, FlatList, TouchableOpacity, Text, StyleSheet, Alert } from 'react-native';
+import { db } from '../../utils/firebaseConfig'; // Asegúrate de que la ruta sea correcta
+import { collection, query, onSnapshot, addDoc, updateDoc, doc, deleteDoc } from 'firebase/firestore'; // Importar funciones de Firestore
 import Tarea from '../Tarea'; // Asegúrate de que la ruta sea correcta
 
 const HomeScreen = ({ navigation }) => {
+  const [tareas, setTareas] = useState([]);
 
-   // Lista de tareas hardcoded
-   const [tareas, setTareas] = useState([
-    { id: '1', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '2', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '3', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '4', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '5', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '6', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '7', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '8', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '9', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '10', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '11', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '12', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '13', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '14', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '15', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '16', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '17', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '18', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-    { id: '19', titulo: 'Comprar leche', fecha: '20/11/2024' },
-    { id: '20', titulo: 'Estudiar React Native', fecha: '21/11/2024' },
-  ]);
-
-  const handleEditTarea = (updatedTarea) => {
-    setTareas(
-      tareas.map((tarea) => (tarea.id === updatedTarea.id ? updatedTarea : tarea))
-    );
-  };
-
-  const handleEdit = (id) => {
-    const tarea = tareas.find((t) => t.id === id);
-    navigation.navigate('NewTarea', {
-      tarea,
-      onSave: handleEditTarea,
+  // Obtener tareas desde Firestore
+  useEffect(() => {
+    const q = query(collection(db, 'tareas'));
+    const unsubscribe = onSnapshot(q, (querySnapshot) => {
+      const tareasData = [];
+      querySnapshot.forEach((documentSnapshot) => {
+        tareasData.push({
+          ...documentSnapshot.data(),
+          id: documentSnapshot.id,
+        });
+      });
+      setTareas(tareasData);
     });
+
+    // Limpiar la suscripción cuando el componente se desmonte
+    return () => unsubscribe();
+  }, []);
+
+  // Guardar nueva tarea en Firestore
+  const handleAddTask = async (newTarea) => {
+    try {
+      await addDoc(collection(db, 'tareas'), newTarea);
+      console.log('Tarea agregada a Firestore');
+    } catch (error) {
+      console.error('Error al agregar tarea:', error);
+    }
   };
 
+  // Editar tarea en Firestore
+  const handleEditTarea = async (updatedTarea) => {
+    try {
+      const tareaRef = doc(db, 'tareas', updatedTarea.id);
+      await updateDoc(tareaRef, updatedTarea);
+      console.log('Tarea actualizada');
+    } catch (error) {
+      console.error('Error al actualizar tarea:', error);
+    }
+  };
+
+  // Eliminar tarea de Firestore
   const handleDelete = (id) => {
     Alert.alert(
       "Eliminar tarea",
@@ -53,8 +58,14 @@ const HomeScreen = ({ navigation }) => {
         },
         {
           text: "Sí",
-          onPress: () => {
-            setTareas(tareas.filter((tarea) => tarea.id !== id));
+          onPress: async () => {
+            try {
+              const tareaRef = doc(db, 'tareas', id);
+              await deleteDoc(tareaRef);
+              console.log('Tarea eliminada de Firestore');
+            } catch (error) {
+              console.error('Error al eliminar tarea:', error);
+            }
           },
         },
       ],
@@ -62,10 +73,13 @@ const HomeScreen = ({ navigation }) => {
     );
   };
 
-  const handleAddTask = (newTarea) => {
-    // Navegar o realizar alguna acción para agregar una nueva tarea
-    setTareas([...tareas, { id: Date.now().toString(), ...newTarea }]);
-    // Puedes usar navigation.navigate('NuevaTarea') si tienes configurada la navegación
+  // Función para ir a la pantalla de edición
+  const handleEdit = (id) => {
+    const tarea = tareas.find((t) => t.id === id);
+    navigation.navigate('NewTarea', {
+      tarea,
+      onSave: handleEditTarea,
+    });
   };
 
   return (
@@ -85,7 +99,10 @@ const HomeScreen = ({ navigation }) => {
         )}
       />
       {/* Botón flotante */}
-      <TouchableOpacity style={styles.floatingButton}  onPress={() => navigation.navigate('NewTarea', { onSave: handleAddTask })}>
+      <TouchableOpacity
+        style={styles.floatingButton}
+        onPress={() => navigation.navigate('NewTarea', { onSave: handleAddTask })}
+      >
         <Text style={styles.buttonText}>+</Text>
       </TouchableOpacity>
     </View>

@@ -11,11 +11,14 @@ export default function App() {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Home">
+        {/* HomeScreen: La pantalla principal donde verás las tareas */}
         <Stack.Screen 
           name="Home" 
           component={HomeScreen} 
           options={{ headerShown: false }} // Ocultar el encabezado si no lo necesitas
         />
+        
+        {/* NewTareaScreen: Pantalla para crear o editar tareas */}
         <Stack.Screen 
           name="NewTarea" 
           component={NewTareaScreen} 

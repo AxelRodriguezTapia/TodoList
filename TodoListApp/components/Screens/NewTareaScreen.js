@@ -74,7 +74,7 @@ const NewTareaScreen = ({ navigation, route }) => {
 
       {tieneFechaLimite && (
         <>
-          <Text style={styles.label}>Fecha límite:</Text>
+          <Text style={styles.labelFecha}>Fecha límite:</Text>
           <TouchableOpacity onPress={() => setDatePickerVisibility(true)}>
             <Text style={styles.input}>{fecha || 'Selecciona la fecha'}</Text>
           </TouchableOpacity>
@@ -106,6 +106,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginBottom: 8,
+    marginTop: 50,
+  },
+  labelFecha: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    marginTop: 30,
   },
   input: {
     borderWidth: 1,
