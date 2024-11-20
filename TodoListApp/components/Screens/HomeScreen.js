@@ -35,6 +35,13 @@ const HomeScreen = ({ navigation }) => {
       console.error('Error al agregar tarea:', error);
     }
   };
+  const handleEdit = (id) => {
+    const tarea = tareas.find((t) => t.id === id);
+    navigation.navigate('NewTarea', {
+      tarea,
+      onSave: handleEditTarea,
+    });
+  }
 
   // Editar tarea en Firestore
   const handleEditTarea = async (updatedTarea) => {
@@ -104,7 +111,7 @@ const HomeScreen = ({ navigation }) => {
       titulo={item.titulo}
       fecha={item.fecha}
       isChecked={item.marcada}
-      onEdit={() => handleEditTarea(item)}
+      onEdit={() => handleEdit(item.id)}
       onDelete={() => handleDelete(item.id)}
       onToggleMarcado={() => toggleTareaMarcada(item.id)} // Pasamos la función de actualización
     />
